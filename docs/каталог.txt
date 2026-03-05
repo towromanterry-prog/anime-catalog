@@ -1,0 +1,92 @@
+anime-catalog/
+  docs/
+    SPEC.md
+    AI_RULES.md
+    ARCHITECTURE.md
+    API_CONTRACT.md
+    SECURITY.md
+    OBSERVABILITY.md
+    OPERATIONS.md
+    RUNBOOK.md
+    ADR/
+      0001-tech-stack.md
+
+  server/
+    package.json
+    src/
+      app.js                 # createExpressApp(): middlewares + routes + error handler
+      index.js               # запуск сервера (listen), graceful shutdown
+      config/
+        env.js               # чтение env + дефолты + валидация
+      db/
+        db.js                # openDb() better-sqlite3, PRAGMA, prepared cache
+        schema.sql           # базовая схема (если без миграций)
+        migrations/
+          0001_init.sql
+          0002_indexes.sql
+        migrate.js           # применение миграций (если используешь)
+      lib/
+        errors.js            # AppError + error codes
+        requestId.js         # X-Request-Id middleware
+        logger.js            # pino (или console structured) — минимально
+        validate.js          # общие валидаторы/схемы
+        rateLimit.js         # простой in-memory лимитер (позже можно заменить)
+        crypto.js            # encrypt/decrypt (для token_enc)
+      anilist/
+        client.js            # GraphQL client: timeout, retry/backoff, concurrency limit
+        queries.js           # строки GraphQL запросов
+      catalog/
+        catalog.service.js   # SQL выдача каталога (filters/sort/paging)
+        refresh.service.js   # refreshCatalog + refreshRelations
+        catalog.routes.js    # /api/catalog, /api/title/:id, /api/meta, /api/suggest/tags
+      auth/
+        auth.routes.js       # /api/auth/*
+        session.store.js     # sessions в SQLite
+        oauth.service.js     # start/callback logic
+      user/
+        userList.service.js  # sync AniList list -> user_media_list
+        flags.service.js     # user_media_flags CRUD
+        user.routes.js       # /api/me/*
+      admin/
+        admin.routes.js      # /api/admin/*
+
+  web/
+    package.json
+    vite.config.*
+    index.html
+    src/
+      main.ts/js
+      app/
+        router.ts
+        pinia.ts
+        queryClient.ts       # vue-query (если используешь)
+      api/
+        http.ts              # fetch/axios wrapper, requestId passthrough
+        catalog.ts
+        auth.ts
+        user.ts
+      stores/
+        auth.store.ts
+        catalog.store.ts     # если без vue-query
+        prefs.store.ts
+      composables/
+        useUrlFilters.ts
+        useSWRIndicator.ts
+      views/
+        CatalogView.vue
+        TitleView.vue
+        AdminView.vue
+      components/
+        catalog/
+          FiltersPanel.vue
+          Grid.vue
+          Card.vue
+          Pagination.vue
+        title/
+          TitleModal.vue
+          FlagsPanel.vue
+      styles/
+        tailwind.css
+
+  .env.example
+  README.md
