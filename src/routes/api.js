@@ -163,7 +163,8 @@ router.get('/auth/anilist/callback', async (req, res, next) => {
 
 router.get('/auth/me', (req, res) => {
   if (!req.session) return sendWithMeta(req, res, { data: null });
-  sendWithMeta(req, res, { data: { id: req.session.user_id, anilistId: req.session.anilist_id, name: req.session.anilist_name } });
+  const isAdmin = config.adminAnilistIds.includes(req.session.anilist_id);
+  sendWithMeta(req, res, { data: { id: req.session.user_id, anilistId: req.session.anilist_id, name: req.session.anilist_name, isAdmin } });
 });
 
 router.post('/auth/logout', (req, res) => {
