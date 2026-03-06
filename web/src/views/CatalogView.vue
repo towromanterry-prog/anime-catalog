@@ -1,7 +1,11 @@
 <!-- web/src/views/CatalogView.vue -->
 <template>
   <div class="grid">
-    <section class="card">
+    <button class="btn mobile-filters-btn" @click="showMobileFilters = !showMobileFilters; vibrate(15)">
+      {{ showMobileFilters ? 'Скрыть фильтры' : 'Показать фильтры' }}
+    </button>
+
+    <section class="card filters-panel" :class="{ 'is-open': showMobileFilters }">
       <div class="hd">Фильтры</div>
       <div class="bd">
         <div class="field">
@@ -385,6 +389,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { fetchCatalog, fetchMeta, suggestTags } from '../api/catalog.js';
+import { vibrate } from '../utils/prefs.js';
 import {
   updateFlags,
   refreshMyList,
@@ -406,6 +411,8 @@ import {
 const route = useRoute();
 const router = useRouter();
 const queryClient = useQueryClient();
+
+const showMobileFilters = ref(false);
 
 const placeholder =
   'data:image/svg+xml;charset=utf-8,' +
@@ -831,6 +838,7 @@ const flagMut = useMutation({
 function toggleFlag(media, field) {
   const mediaId = media.id;
   const next = !media[field];
+  vibrate(15);
   flagMut.mutate({ mediaId, patch: { [field]: next ? 1 : 0 } });
 }
 </script>
