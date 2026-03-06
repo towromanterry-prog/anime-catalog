@@ -16,6 +16,18 @@
       </div>
 
       <div class="field">
+        <label>Внешний вид</label>
+        <div class="row">
+          <button class="btn" type="button" :class="{ primary: prefs.theme === 'light' }" @click="setTheme('light')">Светлая</button>
+          <button class="btn" type="button" :class="{ primary: prefs.theme === 'dark' }" @click="setTheme('dark')">Тёмная</button>
+          <button class="btn" type="button" :class="{ primary: prefs.theme === 'system' }" @click="setTheme('system')">Системная</button>
+        </div>
+        <button class="btn" type="button" :class="{ primary: prefs.vibration }" @click="toggleVibration">
+          Виброотклик: <b>{{ prefs.vibration ? 'Вкл' : 'Выкл' }}</b>
+        </button>
+      </div>
+
+      <div class="field">
         <label>Синхронизация</label>
         <button
           class="btn"
@@ -83,6 +95,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { getMe } from '../api/auth.js';
 import { refreshMyList, fetchFilterPresets, renameFilterPreset, deleteFilterPreset } from '../api/user.js';
 import { migrateToPresetRecord } from '../filters/model.js';
+import { prefs, vibrate } from '../utils/prefs.js';
 
 const queryClient = useQueryClient();
 
@@ -94,6 +107,22 @@ const meQuery = useQuery({
 });
 
 const me = computed(() => meQuery.data.value?.data ?? null);
+
+function setTheme(mode) {
+  if (prefs.theme === mode) return;
+  prefs.theme = mode;
+  vibrate(30);
+}
+
+function toggleVibration() {
+  if (prefs.vibration) {
+    vibrate(30);
+    prefs.vibration = false;
+    return;
+  }
+  prefs.vibration = true;
+  vibrate(30);
+}
 
 const syncNote = ref('');
 const syncMut = useMutation({
