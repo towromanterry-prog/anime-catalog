@@ -1,3 +1,4 @@
+// src/utils/catalog.js
 import { FORMATS, MEDIA_STATUSES, SEASONS, USER_STATUSES } from '../config.js';
 import { badRequest } from './errors.js';
 
@@ -117,6 +118,8 @@ export function cacheKey(year, season) {
   return `y:${year}:s:${season}`;
 }
 
-export function ttlBySeason(season) {
+export function ttlBySeason(year, season) {
+  const currentYear = new Date().getFullYear();
+  if (year <= currentYear - 1) return 315360000;
   return season === 'ALL' ? 259200 : 172800;
 }
