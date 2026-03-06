@@ -29,9 +29,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { getMe, logout, startAniListLogin } from './api/auth.js';
+import { prefs } from './utils/prefs.js';
 
 const queryClient = useQueryClient();
 
@@ -43,6 +44,25 @@ const meQuery = useQuery({
 });
 
 const me = computed(() => meQuery.data.value?.data ?? null);
+
+function applyTheme(mode) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const wantsDark =
+    mode === 'dark' ||
+    (mode === 'system' && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (wantsDark) root.setAttribute('data-theme', 'dark');
+  else root.removeAttribute('data-theme');
+}
+
+watch(
+  () => prefs.theme,
+  (t) => {
+    const mode = t === 'light' || t === 'dark' || t === 'system' ? t : 'system';
+    applyTheme(mode);
+  },
+  { immediate: true }
+);
 
 const logoutMut = useMutation({
   mutationFn: logout,
