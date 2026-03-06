@@ -1,24 +1,35 @@
+/* web/src/style.css */
 :root {
   color-scheme: light dark;
-  --bg: #0b0c10;
-  --panel: #12141b;
-  --muted: #9aa0aa;
-  --text: #e8eaed;
-  --border: rgba(255, 255, 255, 0.08);
-  --accent: #7c5cff;
+
+  /* Minimal Soft — light */
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --text: #2c3e50;
+  --muted: #6b7280;
+  --border: rgba(15, 23, 42, 0.10);
+  --accent: #6d5efc;
   --danger: #ff4d4f;
   --ok: #41d17d;
+
+  --radius-card: 20px;
+  --radius-btn: 12px;
+
+  --shadow-soft: 0 8px 24px rgba(0,0,0,0.04);
+  --shadow-soft-hover: 0 10px 30px rgba(0,0,0,0.06);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #ffffff;
-    --panel: #f7f7fb;
-    --muted: #5f6368;
-    --text: #121212;
-    --border: rgba(0, 0, 0, 0.08);
-    --accent: #5c3bff;
-  }
+[data-theme="dark"] {
+  /* Minimal Soft — dark */
+  --bg: #121212;
+  --panel: #1e1e1e;
+  --text: #e0e0e0;
+  --muted: #a3a3a3;
+  --border: rgba(255, 255, 255, 0.12);
+  --accent: #8b7bff;
+
+  --shadow-soft: 0 8px 24px rgba(0,0,0,0.2);
+  --shadow-soft-hover: 0 10px 30px rgba(0,0,0,0.28);
 }
 
 * { box-sizing: border-box; }
@@ -27,9 +38,10 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -47,7 +59,7 @@ a { color: inherit; text-decoration: none; }
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in oklab, var(--panel) 85%, transparent);
+  background: color-mix(in oklab, var(--panel) 88%, transparent);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -71,6 +83,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--muted);
+  background: color-mix(in oklab, var(--panel) 85%, var(--bg));
 }
 
 .nav {
@@ -88,27 +101,34 @@ a { color: inherit; text-decoration: none; }
 
 .nav a.router-link-active {
   border-color: var(--border);
-  background: var(--panel);
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg));
 }
 
 .btn {
-  border: 1px solid var(--border);
-  background: var(--panel);
+  border: 0;
+  background-color: var(--panel);
   color: var(--text);
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-btn);
   cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.btn:hover { border-color: color-mix(in oklab, var(--border) 40%, var(--accent)); }
+.btn:hover { box-shadow: var(--shadow-soft-hover); }
 
-.btn.primary { background: color-mix(in oklab, var(--accent) 35%, var(--panel)); border-color: color-mix(in oklab, var(--accent) 30%, var(--border)); }
-.btn.danger { background: color-mix(in oklab, var(--danger) 25%, var(--panel)); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); }
+.btn.primary {
+  background-color: color-mix(in oklab, var(--accent) 26%, var(--panel));
+}
+
+.btn.danger {
+  background-color: color-mix(in oklab, var(--danger) 18%, var(--panel));
+}
 
 .grid {
   display: grid;
   grid-template-columns: 320px 1fr;
-  gap: 16px;
+  gap: 24px;
 }
 
 @media (max-width: 960px) {
@@ -116,9 +136,11 @@ a { color: inherit; text-decoration: none; }
 }
 
 .card {
-  border: 1px solid var(--border);
-  background: var(--panel);
-  border-radius: 16px;
+  border: 0;
+  background-color: var(--panel);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card .hd {
@@ -134,10 +156,10 @@ a { color: inherit; text-decoration: none; }
 .field input, .field select, .field textarea {
   width: 100%;
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--panel) 85%, black);
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg));
   color: var(--text);
   padding: 10px 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   outline: none;
 }
 
@@ -154,7 +176,7 @@ a { color: inherit; text-decoration: none; }
   gap: 6px;
   padding: 6px 10px;
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--panel) 90%, transparent);
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg));
   border-radius: 999px;
   font-size: 12px;
 }
@@ -230,7 +252,7 @@ a { color: inherit; text-decoration: none; }
 
 .iconbtn.on {
   border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
-  background: color-mix(in oklab, var(--accent) 18%, var(--panel));
+  background: color-mix(in oklab, var(--accent) 14%, var(--panel));
 }
 
 .dropdown {
@@ -259,7 +281,7 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
 }
 
-.dropdown .menu button:hover { background: color-mix(in oklab, var(--accent) 12%, var(--panel)); }
+.dropdown .menu button:hover { background: color-mix(in oklab, var(--accent) 10%, var(--panel)); }
 
 .banner {
   border: 1px solid var(--border);
@@ -274,7 +296,7 @@ a { color: inherit; text-decoration: none; }
 
 .error {
   border: 1px solid color-mix(in oklab, var(--danger) 35%, var(--border));
-  background: color-mix(in oklab, var(--danger) 18%, var(--panel));
+  background: color-mix(in oklab, var(--danger) 14%, var(--panel));
 }
 
 .ok { color: var(--ok); }
