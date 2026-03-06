@@ -1,12 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+const adminAnilistIds = String(process.env.ADMIN_ANILIST_IDS || '').split(',').map((s) => s.trim()).filter((s) => s).map((s) => Number(s)).filter((n) => Number.isFinite(n));
+
 export const config = {
   host: process.env.HOST || '127.0.0.1',
   port: Number(process.env.PORT || 8008),
   frontendUrl: process.env.FRONTEND_URL || 'http://127.0.0.1:5173',
   dbPath: process.env.DB_PATH || './data/app.db',
   adminKey: process.env.ADMIN_KEY || 'dev-admin-key',
+  adminAnilistIds: adminAnilistIds,
   tokenEncKey: process.env.TOKEN_ENC_KEY || 'dev-token-encryption-key',
   sessionTtlSeconds: Number(process.env.SESSION_TTL_SECONDS || 60 * 60 * 24 * 14),
   userSyncTtlSeconds: Number(process.env.USER_SYNC_TTL_SECONDS || 1800),
