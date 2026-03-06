@@ -1,13 +1,16 @@
+// web/src/router.js
 import { createRouter, createWebHistory } from 'vue-router';
 import CatalogView from './views/CatalogView.vue';
 import TitleView from './views/TitleView.vue';
 import AdminView from './views/AdminView.vue';
+import SettingsView from './views/SettingsView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'catalog', component: CatalogView },
     { path: '/title/:id', name: 'title', component: TitleView, props: true },
+    { path: '/settings', name: 'settings', component: SettingsView },
     { path: '/admin', name: 'admin', component: AdminView }
   ],
   scrollBehavior(to, from, savedPosition) {
