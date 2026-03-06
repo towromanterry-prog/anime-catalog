@@ -1,3 +1,4 @@
+<!-- web/src/views/CatalogView.vue -->
 <template>
   <div class="grid">
     <section class="card">
@@ -238,33 +239,13 @@
         <div class="field">
           <label>Сохранённые фильтры</label>
           <div class="row">
-            <input v-model="presetName" placeholder="Название пресета" />
-            <button class="btn" type="button" @click="savePreset" :disabled="!presetName.trim()">Сохранить</button>
+            <button class="btn" type="button" @click="savePresetPrompt">Сохранить текущие фильтры</button>
           </div>
           <div v-if="savedPresets.length" class="presetList">
             <div v-for="p in savedPresets" :key="p.id" class="presetItem">
-              <template v-if="isRenaming(p)">
-                <input
-                  v-model="renameDraft"
-                  class="presetInput"
-                  placeholder="Название"
-                  @keydown.enter.prevent="confirmRenamePreset(p)"
-                  @keydown.esc.prevent="cancelRename"
-                />
-                <div class="presetActions">
-                  <button class="miniBtn" type="button" title="Сохранить" @click="confirmRenamePreset(p)">✓</button>
-                  <button class="miniBtn" type="button" title="Отмена" @click="cancelRename">×</button>
-                </div>
-              </template>
-              <template v-else>
-                <button class="presetName" type="button" @click="loadPreset(p)" :title="`Применить: ${p.name}`">
-                  {{ p.name }}
-                </button>
-                <div class="presetActions">
-                  <button class="miniBtn" type="button" title="Переименовать" @click="startRename(p)">✎</button>
-                  <button class="miniBtn danger" type="button" title="Удалить" @click="confirmDeletePreset(p)">✕</button>
-                </div>
-              </template>
+              <button class="presetName" type="button" @click="loadPreset(p)" :title="`Применить: ${p.name}`">
+                {{ p.name }}
+              </button>
             </div>
           </div>
 
@@ -408,9 +389,7 @@ import {
   updateFlags,
   refreshMyList,
   fetchFilterPresets,
-  saveFilterPreset,
-  renameFilterPreset,
-  deleteFilterPreset
+  saveFilterPreset
 } from '../api/user.js';
 import { getMe } from '../api/auth.js';
 import {
@@ -503,7 +482,6 @@ function onPreset(e) {
   applyDelta(p.delta);
 }
 
-const presetName = ref('');
 const LS_KEY = 'animeCatalog.savedFilters.v1';
 
 function loadLocalPresets() {
@@ -568,28 +546,15 @@ const savedPresets = computed(() => {
 const savePresetMut = useMutation({
   mutationFn: ({ name, preset }) => saveFilterPreset(name, preset),
   onSuccess: async () => {
-    presetName.value = '';
     await queryClient.invalidateQueries({ queryKey: ['me', 'filterPresets'] });
   }
 });
 
-const deletePresetMut = useMutation({
-  mutationFn: (id) => deleteFilterPreset(id),
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['me', 'filterPresets'] });
-  }
-});
-
-const renamePresetMut = useMutation({
-  mutationFn: ({ id, name }) => renameFilterPreset(id, name),
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['me', 'filterPresets'] });
-  }
-});
-
-function savePreset() {
-  const name = presetName.value.trim();
+function savePresetPrompt() {
+  const nameRaw = window.prompt('Введите название пресета:');
+  const name = String(nameRaw || '').trim();
   if (!name) return;
+
   const now = new Date();
   const current = parseQueryToFilters(route.query, { now });
   const patch = buildPresetPatch(current, { now });
@@ -606,7 +571,6 @@ function savePreset() {
   const next = [{ v: FILTER_PRESET_VERSION, name, patch }, ...filtered].slice(0, 50);
   saveLocalPresets(next);
   localPresets.value = next;
-  presetName.value = '';
 }
 
 function loadPreset(p) {
@@ -615,79 +579,6 @@ function loadPreset(p) {
   router.replace({ query: filtersToQuery(filters, { now }) });
 }
 
-const renamingKey = ref('');
-const renameDraft = ref('');
-
-function presetKey(p) {
-  return String(p?.id || '');
-}
-
-function isRenaming(p) {
-  const k = presetKey(p);
-  return !!k && renamingKey.value === k;
-}
-
-function startRename(p) {
-  const k = presetKey(p);
-  if (!k) return;
-  renamingKey.value = k;
-  renameDraft.value = String(p?.name || '').trim();
-}
-
-function cancelRename() {
-  renamingKey.value = '';
-  renameDraft.value = '';
-}
-
-function confirmRenamePreset(p) {
-  const k = presetKey(p);
-  const curName = String(p?.name || '').trim();
-  const name = String(renameDraft.value || '').trim();
-  if (!k) return cancelRename();
-  if (!name) return;
-  if (name === curName) return cancelRename();
-
-  if (me.value) {
-    if (p?.id) renamePresetMut.mutate({ id: p.id, name });
-    cancelRename();
-    return;
-  }
-
-  // local
-  const list = (localPresets.value || []).map((x) => {
-    if (localPatchId(x.patch) !== k) return x;
-    return { ...x, name };
-  });
-  // Ensure unique names locally (keep first occurrence)
-  const out = [];
-  const seen = new Set();
-  for (const x of list) {
-    if (seen.has(x.name)) continue;
-    seen.add(x.name);
-    out.push(x);
-  }
-  saveLocalPresets(out);
-  localPresets.value = out;
-  cancelRename();
-}
-
-function confirmDeletePreset(p) {
-  const name = String(p?.name || '').trim();
-  if (!name) return;
-  if (!confirm(`Удалить пресет «${name}»?`)) return;
-
-  if (me.value) {
-    if (p?.id) deletePresetMut.mutate(p.id);
-    cancelRename();
-    return;
-  }
-
-  const k = presetKey(p);
-  const list = (localPresets.value || []).filter((x) => localPatchId(x.patch) !== k);
-  saveLocalPresets(list);
-  localPresets.value = list;
-  cancelRename();
-}
 const state = reactive(makeDefaultFilters());
 
 function syncRouteToState() {
@@ -819,7 +710,7 @@ const tagInput = ref('');
 const tagFocused = ref(false);
 
 const tagSuggest = useQuery({
-  queryKey: computed(() => ['suggestTags', tagInput.value.trim()]),
+  queryKey: computed(() => ['suggestTags', 'exc', tagInput.value.trim()]),
   queryFn: () => suggestTags(tagInput.value.trim()),
   enabled: computed(() => tagInput.value.trim().length >= 1),
   staleTime: 30_000
@@ -841,52 +732,34 @@ function removeExcludeTag(tag) {
 }
 
 function onTagBlur() {
-  // allow click on suggestion buttons
   setTimeout(() => {
     tagFocused.value = false;
   }, 120);
 }
 
-function reset() {
-  const now = new Date();
-  const d = makeDefaultFilters({ now });
-  router.replace({ query: filtersToQuery(d, { now }) });
+function removeExcludeTagChip(tag) {
+  removeExcludeTag(tag);
 }
 
-const params = computed(() => ({
-  q: state.q,
-  year: state.year,
-  season: state.season,
-  status: state.status,
-  format: state.format,
-  minScore: state.minScore,
-  adult: state.adult,
-  includeTags: state.includeTags,
-  includeGenres: state.includeGenres,
-  strictMatch: state.strictMatch,
-  excludeTags: state.excludeTags,
-  excludeGenres: state.excludeGenres,
-  onlyNew: state.onlyNew,
-  onlySequels: state.onlySequels,
-  sort: state.sort,
-  offset: state.offset,
-  limit: state.limit,
-  myStatus: state.myStatus,
-  notInMyList: state.notInMyList,
-  watchLaterOnly: state.watchLaterOnly,
-  showHidden: state.showHidden
-}));
+function removeIncludeTagChip(tag) {
+  removeIncludeTag(tag);
+}
+
+function reset() {
+  const now = new Date();
+  router.replace({ query: filtersToQuery(makeDefaultFilters({ now }), { now }) });
+}
 
 const catalogQuery = useQuery({
-  queryKey: computed(() => ['catalog', JSON.stringify(params.value), !!me.value]),
-  queryFn: () => fetchCatalog(params.value),
-  keepPreviousData: true,
-  staleTime: 15_000
+  queryKey: computed(() => ['catalog', route.query]),
+  queryFn: () => fetchCatalog(route.query),
+  keepPreviousData: true
 });
 
+const catalogMeta = computed(() => catalogQuery.data.value?.meta);
+const catalogTotal = computed(() => catalogQuery.data.value?.meta?.paging?.total ?? 0);
+
 const items = computed(() => catalogQuery.data.value?.data || []);
-const catalogMeta = computed(() => catalogQuery.data.value?.meta || null);
-const catalogTotal = computed(() => catalogMeta.value?.paging?.total || 0);
 
 const page = computed(() => Math.floor(state.offset / state.limit) + 1);
 const totalPages = computed(() => Math.max(1, Math.ceil(catalogTotal.value / state.limit)));
@@ -904,15 +777,10 @@ function jump(e) {
   commitFilters({ offset: (p - 1) * state.limit }, { resetOffset: false });
 }
 
-function formatGenres(genresJson) {
-  if (!genresJson) return '';
+function formatGenres(genres_json) {
   try {
-    const arr = JSON.parse(genresJson);
+    const arr = JSON.parse(genres_json || '[]');
     if (!Array.isArray(arr)) return '';
-
-    // UX: In filtered mode users expect to see the matched genres in the list.
-    // AniList can place matched genres after the first 4 items, so we reorder
-    // for display: selected includeGenres first, then the rest.
     const inc = Array.isArray(state.includeGenres) ? state.includeGenres : [];
     const max = 6;
 
