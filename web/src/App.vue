@@ -1,3 +1,4 @@
+<!-- web/src/App.vue -->
 <template>
   <header class="topbar">
     <div class="brand">
@@ -8,11 +9,12 @@
 
     <nav class="nav">
       <RouterLink to="/">Каталог</RouterLink>
-      <RouterLink to="/admin">Админ</RouterLink>
+      <RouterLink to="/admin" v-if="me?.isAdmin">Админ</RouterLink>
       <button class="btn primary" v-if="!me" @click="onLogin" :disabled="meQuery.isFetching.value">
         Войти через AniList
       </button>
-      <button class="btn danger" v-else @click="onLogout" :disabled="logoutMut.isPending.value">
+      <RouterLink to="/settings" v-if="me">Настройки</RouterLink>
+      <button class="btn danger" v-if="me" @click="onLogout" :disabled="logoutMut.isPending.value">
         Выйти
       </button>
     </nav>
